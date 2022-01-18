@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: devpass
+      MYSQL_DATABASE: bdBlog
+      MYSQL_USER: devuser
+      MYSQL_PASSWORD: devpass
+    ports:
+      - "9906:3306"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - 8580:80
+    depends_on:
+      - db
+    environment:
+      MYSQL_ROOT_PASSWORD: devpass
+      PMA_USER: root
+      PMA_PASSWORD: devpass
+      PMA_HOST: db
+
+  web:
+    image: php:8.0-apache
+    container_name: php_web
+    depends_on:
+      - phpmyadmin
+    volumes:
+      - ./ejercicios/:/var/www/html/
+    ports:
+      - "8100:80"
+    stdin_open: true
+    tty: true
