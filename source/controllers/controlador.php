@@ -1,6 +1,6 @@
 <?php
 
-    require_once 'models/modelo.php';
+    require_once '../models/modelo.php';
 
     class controlador {
         
