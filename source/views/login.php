@@ -1,5 +1,7 @@
 <?php
 
+    require_once "../libraries/recaptchalib.php";
+
     //Se dan valores para un usuario y contraseña que sean válidos y puedan hacer login
     $usuarioValido = "Mortadelo";
     $passwordValido = "12345";
@@ -49,7 +51,7 @@
 
                 }
 
-                header ("Location: ./inicio.php");//Nos dirige a la página pricipal tras el login
+                require_once "../includes/captcha.php";
 
             } else {
                 //Si los valores de usuario y contraseña no son correctos volvemos a login y mostramos el error de datos no válidos
@@ -133,6 +135,8 @@
                     </label>
                     <br><br>
 
+                    <div class="g-recaptcha row justify-content-center" data-sitekey="6Lf7ticeAAAAAA8zF-Lc3BI2qcP8ZSdo01LKzJc3"></div>
+
                     <?php
 
                         //Accede si hay valores en ?error= tras la ruta de la página
@@ -149,6 +153,10 @@
                             }elseif ($_GET["error"] == "vacio") {
 
                                 echo '<div class="alert alert-danger">'."Debe rellenar sus credenciales".'</div> <br>';
+            
+                            }elseif ($_GET["error"] == "captcha") {
+
+                                echo '<div class="alert alert-danger">'."La validación no es correcta, rellene el Captcha".'</div> <br>';
             
                             }
                                 

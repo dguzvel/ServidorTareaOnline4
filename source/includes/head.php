@@ -1,6 +1,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tarea Online 4 - Blog</title>
+<!-- Captcha -->
+<script src="https://www.google.com/recaptcha/api.js?hl=es" async defer></script>
 <!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Irish+Grover&display=swap " rel="stylesheet">
 <!-- Bootstrap -->
