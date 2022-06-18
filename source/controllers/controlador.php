@@ -898,6 +898,22 @@
 
         }
 
+        public function listarPDF(){
+
+            $parametros = ["titulo" => "Mi Blog PHP-MVC", "datos" => NULL];
+    
+            $resultadoModelo = $this->modelo->listarPDF();
+    
+            if ($resultadoModelo["correcto"]){
+    
+                $parametros["datos"] = $resultadoModelo["datos"];
+    
+            }
+    
+            include_once '../views/previaPDF.php';
+    
+        }
+
     }
 
 ?>

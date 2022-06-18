@@ -687,6 +687,27 @@
     
         }
 
+        public function listarPDF(){
+
+            $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];             
+
+            $sql = "SELECT * FROM entradas;";
+
+            $query = $this->conexion->query($sql);
+            $query->setFetchMode(PDO::FETCH_ASSOC);
+            $articulos = $query->fetchAll();
+            
+            if ($query){ 
+                
+                $resultadoModelo["correcto"] = TRUE;
+                $resultadoModelo["datos"] = $articulos;
+
+            }             
+    
+            return $resultadoModelo;
+
+        }
+
     }
 
 ?>

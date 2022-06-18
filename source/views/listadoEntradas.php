@@ -67,6 +67,12 @@
                 <?php } } ?>
             
             </table>
+
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="d-flex justify-content-center">
+                <button type="button" class="btn btn-success" onclick="location.href='../views/index.php?accion=listarPDF'">Previsualizar PDF</button>
+            </div>
+            &nbsp;&nbsp;&nbsp;&nbsp;
             
             <!-- Navegación de la página -->
             <nav aria-label="Page navigation">
