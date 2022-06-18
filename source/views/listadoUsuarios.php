@@ -45,10 +45,21 @@
                         <td><?=$dat["nick"]?></td>
                         <td><?=$dat["email"]?></td>
                         <td><img src="fotos/<?=$dat["imagen"]?>" height="100" width="100"/></td>
-                        <td><a href="../views/index.php?accion=editarUsuario&usuario_id=<?=$dat["usuario_id"]?>">Editar</a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;
-                            <a href="../views/index.php?accion=eliminarUsuario&usuario_id=<?=$dat["usuario_id"]?>">Eliminar</a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;
+                        <td>
+                            <?php if($_COOKIE["categoria_id"] == 1 || $_COOKIE["usuario_id"] == $dat["usuario_id"]){ ?>
+
+                                <a href="../views/index.php?accion=editarUsuario&usuario_id=<?=$dat["usuario_id"]?>">Editar</a>
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+
+                            <?php } ?>
+                        
+                            <?php if($_COOKIE["categoria_id"] == 1 || $_COOKIE["usuario_id"] == $dat["usuario_id"]){ ?>
+
+                                <a href="../views/index.php?accion=eliminarUsuario&usuario_id=<?=$dat["usuario_id"]?>" onclick="return confirm('¿Seguro que desea eliminar a este usuario?')">Eliminar</a>
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+
+                            <?php } ?>
+                        
                             <a href="../views/index.php?accion=listarUnUsuario&usuario_id=<?=$dat["usuario_id"]?>">Detallar</a>
                         </td>
                     </tr>

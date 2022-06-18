@@ -15,13 +15,32 @@
 
         <?php require '../includes/header.php'; ?>
         <?php require '../includes/sesion.php'; ?>
+        <?php require '../includes/validarUsuario.php'; ?>
 
             <section class="container cuerpo text-center">
 
-                <h3 id="titulo">Añadir Entrada</h3>
-                <br>
+            <?php
 
-                <form action="../views/index.php?accion=insertarEntrada" method="POST" enctype="multipart/form-data">
+            if (!empty($parametros["mensajes"])){
+
+                foreach ($parametros["mensajes"] as $mensaje) :
+
+            ?> 
+
+                <div class="alert alert-<?= $mensaje["tipo"] ?>"><?= $mensaje["mensaje"] ?></div>
+
+            <?php 
+
+                    endforeach;
+
+                }
+            
+            ?>
+
+                <h3 id="titulo">Editar Entrada</h3>
+                <br>
+                <!-- Formulario HTML que realizará la acción de la ruta establecida, recoger.php -->
+                <form action="../views/index.php?accion=editarEntrada" method="POST" enctype="multipart/form-data">
 
                     <label for="titulo">
                         Titulo:
@@ -29,22 +48,29 @@
                             <?php
                                 if(isset($_POST["titulo"])){
                                     echo "value='{$_POST["titulo"]}'";
+                                }else{
+                                    echo "value='{$parametros["datos"]["titulo"]}'";
                                 }
                             ?>
-                        required />
+                        />
                     </label>
-                    <br>
+                    <br><br>
+                    
+                    <?php if ($parametros["datos"]["imagen"] != null && $parametros["datos"]["imagen"] != ""){ ?>
+                        <img src="fotos/<?= $parametros["datos"]["imagen"] ?>" height="100" width="100"/></br>
+                    <?php } ?>
 
                     <label for="imagen">
                         Imagen:
                         <input type="file" name="imagen" class="form-control" />
                     </label>
                     <br><br>
-                    
+
                     Descripcion:
                     <textarea name="descripcion" id="descripcion"></textarea>
+                    <br><br>
 
-                    <br>
+                    <input type="hidden" name="entrada_id" value="<?php echo $id;?>">
 
                     <input type="submit" value="Enviar" name="submit" class="btn btn-success" />
 
@@ -58,7 +84,7 @@
                         });
                 </script>
             </section>
-        </main>        
+        </main>
 
         <?php require '../includes/footer.php'; ?>
 

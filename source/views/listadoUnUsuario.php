@@ -13,9 +13,9 @@
             <div class="text-center">
                 <?php
 
-                if (!empty($parametros["mensajes"])){
+                    if (!empty($parametros["mensajes"])){
 
-                    foreach ($parametros["mensajes"] as $mensaje) :
+                        foreach ($parametros["mensajes"] as $mensaje) :
 
                 ?> 
 
@@ -49,9 +49,19 @@
                         <td><?=$parametros["datos"]["email"]?></td>
                         <td><?=$parametros["datos"]["password"]?></td>
                         <td><img src="fotos/<?=$parametros["datos"]["imagen"]?>" height="100" width="100"/></td>
-                        <td><a href="../views/index.php?accion=editarUsuario&usuario_id=<?=$parametros["datos"]["usuario_id"]?>">Editar</a>
-                            &nbsp;&nbsp;&nbsp;&nbsp;
-                            <a href="../views/index.php?accion=eliminarUsuario&usuario_id=<?=$parametros["datos"]["usuario_id"]?>">Eliminar</a>
+                        <td>
+                            <?php if($_COOKIE["categoria_id"] == 1 || $_COOKIE["usuario_id"] == $parametros["datos"]["usuario_id"]){ ?>
+
+                                <a href="../views/index.php?accion=editarUsuario&usuario_id=<?=$parametros["datos"]["usuario_id"]?>">Editar</a>
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+
+                            <?php } ?>
+
+                            <?php if($_COOKIE["categoria_id"] == 1 || $_COOKIE["usuario_id"] == $parametros["datos"]["usuario_id"]){ ?>
+
+                                <a href="../views/index.php?accion=eliminarUsuario&usuario_id=<?=$parametros["datos"]["usuario_id"]?>" onclick="return confirm('¿Seguro que desea eliminar a este usuario?')">Eliminar</a>
+
+                            <?php } ?>
                         </td>
                     </tr>
             

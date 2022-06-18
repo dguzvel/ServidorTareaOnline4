@@ -12,6 +12,8 @@
         public function __construct(){
             $this->conectar();
         }
+
+        //Creación de Base de Datos y Tablas
         
         public function conectar(){
 
@@ -82,6 +84,58 @@
             }
 
         }
+
+        //Login y roles
+
+        public function login(){
+
+            $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
+    
+            try {               
+
+                $sql = "SELECT * FROM usuarios;";
+
+                $query = $this->conexion->query($sql);
+                $query->setFetchMode(PDO::FETCH_ASSOC);
+                $articulos = $query->fetchAll();
+                
+                if ($query){ 
+                    
+                    $resultadoModelo["correcto"] = TRUE;
+                    $resultadoModelo["datos"] = $articulos;
+
+                }              
+    
+            } catch(PDOException $e){
+    
+                $resultadoModelo["error"] = $e->getMessage();
+
+            }
+    
+            return $resultadoModelo;
+
+        }    
+        
+        public function categoria($nick){
+
+            $sql = "SELECT * FROM usuarios WHERE nick = :nick;";
+    
+            $query = $this->conexion->prepare($sql);
+
+            $query->execute(['nick' => $nick]);
+             
+            if ($query) { 
+
+                $resultadoModelo["correcto"] = TRUE;
+                $resultadoModelo["datos"] = $query->fetch(PDO::FETCH_ASSOC);
+
+            }
+
+            return $resultadoModelo;
+
+        }
+
+        //Modelo USUARIO
 
         public function insertarUsuario($datos){
 
@@ -281,13 +335,72 @@
             
         }
 
-        public function login(){
+        //Modelo ENTRADA
 
-            $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
+        public function insertarEntrada($datos){
+
+            $resultadoModelo = [ "correcto" => FALSE, "error" => NULL ];
+
+            try {
+                
+                //Iniciamos la transacción de Datos
+                $this->conexion->beginTransaction();
+                //Insertar valores en una tabla de la Base de Datos
+                $sql = "INSERT INTO entradas VALUES(
+
+                    NULL,
+                    :usuario_id,
+                    :categoria_id,
+                    :titulo,
+                    :imagen,
+                    :descripcion,
+                    :fecha
+
+                );";
+                $query = $this->conexion->prepare($sql);
+                $query->execute([
+
+                        'usuario_id' => $datos["usuario_id"],
+                        'categoria_id' => $datos["categoria_id"],
+                        'titulo' => $datos["titulo"],
+                        'imagen' => $datos["imagen"],
+                        'descripcion' => $datos["descripcion"],
+                        'fecha' => $datos["fecha"]
+
+                        ]);
+
+                if($query){
+
+                    $this->conexion->commit();
+                    $resultadoModelo ["correcto"] = TRUE;
+
+                }
+
+            } catch (PDOException $e) {
+
+                $this->conexion->rollback();
+                $resultadoModelo ["error"] = $e->getMessage();
+
+            }
+
+                return $resultadoModelo;
+
+        }
+
+        public function listarEntradas(){
+
+            $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "pagina" => NULL, "numeroPagina" => NULL, "error" => NULL];
     
             try {               
 
-                $sql = "SELECT * FROM usuarios;";
+                $pagina = isset($_GET["pagina"]) ? (int)$_GET["pagina"] : 1;
+                $resultadoModelo["pagina"] = $pagina;
+
+                $filasPorPagina = 2;
+
+                $inicio = ($pagina > 1) ? ($pagina * $filasPorPagina - $filasPorPagina) : 0;
+
+                $sql = "SELECT SQL_CALC_FOUND_ROWS * FROM entradas LIMIT $inicio, $filasPorPagina;";
 
                 $query = $this->conexion->query($sql);
                 $query->setFetchMode(PDO::FETCH_ASSOC);
@@ -298,7 +411,14 @@
                     $resultadoModelo["correcto"] = TRUE;
                     $resultadoModelo["datos"] = $articulos;
 
-                }              
+                }
+
+                $totalArticulos = $this->conexion->query("SELECT FOUND_ROWS() as total;");
+                $totalArticulos = $totalArticulos->fetch()["total"];
+
+                $numeroPagina = ceil($totalArticulos / $filasPorPagina);
+                $resultadoModelo["numeroPagina"] = $numeroPagina;                
+    
     
             } catch(PDOException $e){
     
@@ -308,25 +428,108 @@
     
             return $resultadoModelo;
 
-        }    
-        
-        public function categoria($nick){
+        }
 
-            $sql = "SELECT * FROM usuarios WHERE nick = :nick;";
+        public function listarUnaEntrada($id){
+
+            $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
     
-            $query = $this->conexion->prepare($sql);
+            if ($id && is_numeric($id)){
+    
+                try {
+    
+                    $sql = "SELECT * FROM entradas WHERE entrada_id = :entrada_id;";
+    
+                    $query = $this->conexion->prepare($sql);
+    
+                    $query->execute(['entrada_id' => $id]);
+                     
+                    if ($query) { 
+    
+                        $resultadoModelo["correcto"] = TRUE;
+                        $resultadoModelo["datos"] = $query->fetch(PDO::FETCH_ASSOC);
+    
+                    }
+    
+                } catch (PDOException $e) {
+    
+                    $resultadoModelo["error"] = $e->getMessage();
+    
+                }
+    
+            }
+          
+            return $resultadoModelo;
+    
+        }
 
-            $query->execute(['nick' => $nick]);
-             
-            if ($query) { 
+        public function editarEntrada($datos){
 
-                $resultadoModelo["correcto"] = TRUE;
-                $resultadoModelo["datos"] = $query->fetch(PDO::FETCH_ASSOC);
+            $resultadoModelo = ["correcto" => FALSE, "error" => NULL];
+    
+            try{
+    
+                $this->conexion->beginTransaction();
+    
+                $sql = "UPDATE entradas SET titulo = :titulo, imagen = :imagen, descripcion = :descripcion WHERE entrada_id = :entrada_id;";
+    
+                $query = $this->conexion->prepare($sql);
+    
+                $query->execute(['entrada_id' => $datos["entrada_id"], 'titulo' => $datos["titulo"],
+                'imagen' => $datos["imagen"], 'descripcion' => $datos["descripcion"]]);
+    
+                if ($query){ 
+    
+                    $this->conexion->commit();
+                    $resultadoModelo["correcto"] = TRUE;
+
+                } 
+    
+            } catch (PDOException $e){
+    
+                $this->conexion->rollback();
+                $resultadoModelo["error"] = $e->getMessage();
+    
+            }
+    
+            return $resultadoModelo;
+    
+        }      
+
+        public function eliminarEntrada($id){
+
+            $resultadoModelo = ["correcto" => FALSE, "error" => NULL];
+    
+            if ($id and is_numeric($id)){
+    
+                try{
+    
+                    $sql = "DELETE FROM entradas WHERE entrada_id = :entrada_id;";
+    
+                    $query = $this->conexion->prepare($sql);
+    
+                    $query->execute(['entrada_id' => $id]);
+            
+                    if ($query){
+                        
+                       $resultadoModelo["correcto"] = TRUE;
+            
+                    }
+            
+                } catch (PDOException $e){ 
+            
+                    $resultadoModelo["error"] = $e->getMessage();
+
+                }
+            
+            } else {
+    
+                $resultadoModelo["correcto"] = FALSE;
 
             }
-
+    
             return $resultadoModelo;
-
+            
         }
 
     }

@@ -19,14 +19,22 @@
     </nav>
     <div class="collapse" id="navbarToggleExternalContent">
         <div class="bg-dark p-4">
+            <?php if($_COOKIE["categoria_id"] == 1){ ?>
+
                 <button type="button" class="btn btn-light" onclick="location.href='formularioUsuario.php'">Registro de Usuarios</button>
                 &nbsp;&nbsp;&nbsp;&nbsp;
+
+            <?php } ?>
                 <button type="button" class="btn btn-light" onclick="location.href='../views/index.php?accion=listarUsuarios'">Listado de Usuarios</button>
                 &nbsp;&nbsp;&nbsp;&nbsp;
                 <button type="button" class="btn btn-light" onclick="location.href='formularioEntrada.php'">Dejar una Entrada</button>
                 &nbsp;&nbsp;&nbsp;&nbsp;
                 <button type="button" class="btn btn-light" onclick="location.href='../views/index.php?accion=listarEntradas'">Listado de Entradas</button>
                 &nbsp;&nbsp;&nbsp;&nbsp;
+            <?php if($_COOKIE["categoria_id"] == 1){ ?>
+
                 <button type="button" class="btn btn-light" onclick="location.href='../views/index.php?accion=listarLogs'">Tabla de Logs</button>
+
+            <?php } ?>
         </div>
     </div>

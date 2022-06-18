@@ -14,6 +14,8 @@
 
         }
 
+        //Inicio y Login
+
         public function index(){
 
             error_reporting(E_ERROR | E_WARNING | E_PARSE);
@@ -54,9 +56,11 @@
                         $_SESSION["usuario"] = $_POST["usuario"];//El valor usuario de la sesión será el introducido en el formulario
                         
                         $resultadoCategoria = $this->modelo->categoria($_POST["usuario"]);    
-                        $categoria = $resultadoCategoria["datos"]["categoria_id"];
+                        $categoria_id = $resultadoCategoria["datos"]["categoria_id"];
+                        $usuario_id = $resultadoCategoria["datos"]["usuario_id"];
 
-                        setcookie ("categoria", $categoria, time() + (15 * 24 * 60 * 60));
+                        setcookie ("categoria_id", $categoria_id, time() + (15 * 24 * 60 * 60));
+                        setcookie ("usuario_id", $usuario_id, time() + (15 * 24 * 60 * 60));
 
                         //Si el checkbox de recordar está marcado, se crearán las cookies
                         if(isset($_POST["recordar"]) && ($_POST["recordar"] == "on")){
@@ -110,6 +114,8 @@
             include_once '../views/login.php';
 
         }
+
+        //Funciones para Usuarios
 
         public function insertarUsuario(){
 
@@ -485,6 +491,273 @@
               include_once '../views/formularioActualizaUsuario.php'; 
     
         }
+
+        //Funciones para Entradas
+
+        public function insertarEntrada(){
+
+            $errores = array();
+    
+            //si se ha pulsado el botón del formulario y ha recibido datos
+            if (isset($_POST) && !empty($_POST) && isset($_POST["submit"])){
+
+                //si existe un archivo tipo imagen y no está vacío el campo
+                if (isset($_FILES["imagen"]) and (!empty($_FILES["imagen"]["tmp_name"]))){
+    
+                    if (!is_dir("fotos")){ //si no existe un directorio llamado 'fotos', lo creará
+    
+                        $carpeta = mkdir("fotos", 0777, true);
+    
+                    } else {
+    
+                        $carpeta = true;
+                    }
+    
+                    if ($carpeta){ //si está el directorio fotos, la imagen se moverá a dicho directorio
+    
+                        $nombreImagen= time()."-".$_FILES["imagen"]["name"];
+    
+                        move_uploaded_file($_FILES["imagen"]["tmp_name"], "fotos/".$nombreImagen);
+    
+                        $imagen = $nombreImagen;
+    
+                    }
+                }
+                
+                $ahora = date('Y-m-d H:i:s');
+
+                $resultadoModelo = $this->modelo->insertarEntrada(['usuario_id' => $_COOKIE["usuario_id"],
+                                                                'categoria_id' => $_COOKIE["categoria_id"], 
+                                                                'titulo' => $_POST["titulo"],
+                                                                'imagen' => $imagen,
+                                                                'descripcion' => $_POST["descripcion"],
+                                                                'fecha' => $ahora]);
+
+                if ($resultadoModelo["correcto"]){
+
+                    $this->mensajes[] = ["tipo" => "success",
+                    "mensaje" => "Entrada registrada correctamente"];
+
+                } else {
+
+                    $this->mensajes[] = [
+                        "tipo" => "danger",
+                        "mensaje" => "No se ha podido registrar la entrada <br>({$resultadoModelo["error"]})"
+                    ];
+
+                }
+    
+            }
+            
+            $parametros = [
+                "titulo" => "Mi Blog PHP-MVC",
+                "datos" => [
+                    "usuario_id" => isset($usuario_id) ? $usuario_id : "",
+                    "categria_id" => isset($categria_id) ? $categria_id : "",
+                    "titulo" => isset($titulo) ? $titulo : "",
+                    "imagen" => isset($imagen) ? $imagen : "",
+                    "descripcion" => isset($descripcion) ? $descripcion : "",
+                    "fecha" => isset($fecha) ? $fecha : ""
+                ],
+                "mensajes" => $this->mensajes
+            ];
+
+            include_once '../views/formularioEntrada.php';
+    
+        }
+
+        public function listarEntradas(){
+
+            $parametros = ["titulo" => "Mi Blog PHP-MVC", "datos" => NULL, "pagina" => NULL, "numeroPagina" => NULL, "mensajes" => []];
+    
+            $resultadoModelo = $this->modelo->listarEntradas();
+    
+            if ($resultadoModelo["correcto"]){
+    
+                $parametros["datos"] = $resultadoModelo["datos"];
+                $parametros["pagina"] = $resultadoModelo["pagina"];
+                $parametros["numeroPagina"] = $resultadoModelo["numeroPagina"];
+    
+                $this->mensajes[] = ["tipo" => "success",
+                "mensaje" => "Las entradas se han listado correctamente <br/>"];
+    
+            } else {
+    
+                $this->mensajes[] = ["tipo" => "danger", "mensaje" => 
+                "No se han podido listar las entradas correctamente <br/>"];
+
+            }
+    
+            $parametros["mensajes"] = $this->mensajes; 
+    
+            include_once '../views/listadoEntradas.php';
+    
+        }
+
+        public function eliminarEntrada(){
+
+            $id = $_GET["entrada_id"];
+    
+            if (isset($_GET["entrada_id"]) and is_numeric($_GET["entrada_id"])){
+    
+                $resultadoModelo = $this->modelo->eliminarEntrada($id);
+    
+                if ($resultadoModelo["correcto"] == TRUE){
+    
+                    $this->mensajes[] = ["tipo" => "success", "mensaje" => "La entrada ha sido eliminado correctamente <br>"];
+    
+                } else {
+    
+                    $this->mensajes[] = ["tipo" => "danger", "mensaje" => "No se ha podido eliminar La entrada debido a un error"];
+                }
+    
+            } else {
+    
+                $this->mensajes[] = ["tipo" => "danger","mensaje" => 
+                "La entrada que se ha intentado eliminar no existe o no se ha podido acceder a ella"];
+
+            }
+    
+            $this->listarEntradas();
+
+        }        
+        
+        public function listarUnaEntrada(){
+
+            $id = $_GET["entrada_id"];
+
+            $parametros = ["titulo" => "Mi Blog PHP-MVC", "datos" => NULL, "mensajes" => []];
+    
+            if (isset($_GET["entrada_id"]) and is_numeric($_GET["entrada_id"])){
+    
+                $resultadoModelo = $this->modelo->listarUnaEntrada($id);
+    
+                if ($resultadoModelo["correcto"]){
+
+                    $parametros["datos"] = $resultadoModelo["datos"];
+    
+                    $this->mensajes[] = ["tipo" => "success", "mensaje" => "Aquí se muestra con más detalle la entrada especificada <br>"];
+    
+                } else {
+    
+                    $this->mensajes[] = ["tipo" => "danger", "mensaje" => "No se ha podido detallar la entrada debido a un error"];
+                }
+    
+            } else {
+    
+                $this->mensajes[] = ["tipo" => "danger","mensaje" => 
+                "La entrada que desea detallar no existe o no se ha podido acceder a ella"];
+
+            }
+
+            $parametros["mensajes"] = $this->mensajes;
+
+            include_once '../views/listadoUnaEntrada.php';
+
+        }
+
+        public function editarEntrada(){
+
+            $errores = array();
+    
+            $presenteTitulo = "";
+            $presenteImagen = "";
+            $presenteDescripcion = "";
+    
+            if (isset($_POST["submit"])) {
+                 
+                $id = $_POST["entrada_id"];
+    
+                $nuevoTitulo = $_POST["titulo"];
+                $nuevaImagen = "";
+                $nuevaDescripcion = $_POST["descripcion"];
+                
+                $imagen = NULL;
+          
+                if (isset($_FILES["imagen"]) and (!empty($_FILES["imagen"]["tmp_name"]))){ 
+    
+                    if (!is_dir("fotos")){
+    
+                        $carpeta = mkdir("fotos", 0777, true);
+    
+                    } else {
+    
+                        $carpeta = true;
+                    }
+    
+                    if ($carpeta){
+    
+                        $nombreImagen= time()."-".$_FILES["imagen"]["name"];
+    
+                        $moverImagen = move_uploaded_file($_FILES["imagen"]["tmp_name"], "fotos/".$nombreImagen);
+    
+                        $imagen = $nombreImagen;
+    
+                    }
+                }
+    
+                $nuevaImagen = $imagen;
+                  
+                $resultadoModelo  = $this->modelo->editarEntrada([
+                                                                'entrada_id' => $id,
+                                                                'titulo' => $nuevoTitulo, 
+                                                                'imagen' => $nuevaImagen,
+                                                                'descripcion' => $nuevaDescripcion
+                                                                ]);
+                
+                if ($resultadoModelo ["correcto"]){
+
+                    $this->mensajes[] = ["tipo" => "success", "mensaje" => "La entrada se ha actualizado correctamente"];
+
+                }else{
+
+                    $this->mensajes[] = ["tipo" => "danger", "mensaje" => "La entrada no ha podido actualizar sus datos <br>"];
+
+                }
+          
+                $presenteTitulo = $nuevoTitulo;
+                $presenteImagen = $nuevaImagen;
+                $presenteDescripcion = $nuevaDescripcion;
+    
+            } else {
+    
+                if (isset($_GET['entrada_id']) && (is_numeric($_GET['entrada_id']))) {
+
+                    $id = $_GET['entrada_id'];
+
+                    $resultadoModelo = $this->modelo->listarUnaEntrada($id);
+                    
+                    if ($resultadoModelo ["correcto"]){
+
+                        $this->mensajes[] = ["tipo" => "success", "mensaje" => "Se han recuperado correctamente los datos de la entrada"];
+
+                        $presenteTitulo = $resultadoModelo ["datos"]["titulo"];
+                        $presenteImagen = $resultadoModelo ["datos"]["imagen"];
+                        $presenteDescripcion = $resultadoModelo ["datos"]["descripcion"];
+
+                    } else{
+
+                        $this->mensajes[] = ["tipo" => "danger",
+                        "mensaje" => "No se han podido recuperar los datos de la entrada <br>"];
+
+                    }
+                }
+
+              }
+
+              $parametros = [
+                "titulo" => "Mi Blog PHP-MVC",
+                "datos" => [
+                    "titulo" => $presenteTitulo,
+                    "imagen" => $presenteImagen,
+                    "descripcion" => $presenteDescripcion
+                ],
+                "mensajes" => $this->mensajes
+              ];                  
+                
+              include_once '../views/formularioActualizaEntrada.php'; 
+    
+        }    
 
     }
 
