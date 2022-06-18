@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tarea Online 4 - Blog</title>
+<title><?= $parametros["titulo"] ?></title>
 <!-- Captcha -->
 <script src="https://www.google.com/recaptcha/api.js?hl=es" async defer></script>
 <!-- Google Fonts -->
@@ -10,3 +10,5 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 <!-- CSS -->
 <link href="../style/estilo.css" rel="stylesheet">
+<!-- CKEditor -->
+<script src="../includes/ckeditor/ckeditor.js"></script>
