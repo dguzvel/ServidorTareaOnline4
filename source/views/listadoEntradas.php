@@ -35,6 +35,7 @@
                 <tr>
                     <th>TITULO</th>
                     <th>IMAGEN</th>
+                    <th><a href="../views/index.php?accion=listarEntradas&direccion=<?=$parametros["direccion"]?>">FECHA<i id="icono" class="fa fa-sort"></i></a></th>
                     <th>OPERACIONES</th>
                 </tr>
 
@@ -43,6 +44,7 @@
                     <tr>
                         <td><?=$dat["titulo"]?></td>
                         <td><img src="fotos/<?=$dat["imagen"]?>" height="100" width="100"/></td>
+                        <td><?=$dat["fecha"]?></td>
                         <td>
                             <?php if($_COOKIE["categoria_id"] == 1 || $_COOKIE["usuario_id"] == $dat["usuario_id"]){ ?>
 
@@ -81,7 +83,7 @@
                 <?php }else{ ?>
 
                 <li class="page-item">
-                <a class="page-link" href="../views/index.php?accion=listarUsuarios&pagina=<?php echo $parametros["pagina"] - 1 ?>" aria-label="Previous">
+                <a class="page-link" href="../views/index.php?accion=listarEntradas&pagina=<?php echo $parametros["pagina"] - 1 ?>" aria-label="Previous">
                     <span aria-hidden="true">«</span>
                     <span class="sr-only">Anterior</span>
                 </a>
@@ -95,13 +97,13 @@
                     if($parametros["pagina"] == $i){
 
                     echo "<li class='page-item active'>
-                            <a class='page-link' href='../views/index.php?accion=listarUsuarios&pagina=$i'>$i</a>
+                            <a class='page-link' href='../views/index.php?accion=listarEntradas&pagina=$i'>$i</a>
                             </li>";
 
                     }else{
 
                     echo "<li class='page-item'>
-                            <a class='page-link' href='../views/index.php?accion=listarUsuarios&pagina=$i'>$i</a>
+                            <a class='page-link' href='../views/index.php?accion=listarEntradas&pagina=$i'>$i</a>
                             </li>";
 
                     }  
@@ -123,7 +125,7 @@
                 <?php }else{ ?>
 
                 <li class="page-item">
-                <a class="page-link" href="../views/index.php?accion=listarUsuarios&pagina=<?php echo $parametros["pagina"] + 1 ?>" aria-label="Previous">
+                <a class="page-link" href="../views/index.php?accion=listarEntradas&pagina=<?php echo $parametros["pagina"] + 1 ?>" aria-label="Previous">
                     <span aria-hidden="true">»</span>
                     <span class="sr-only">Siguiente</span>
                 </a>

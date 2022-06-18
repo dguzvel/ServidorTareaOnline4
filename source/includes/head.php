@@ -12,3 +12,5 @@
 <link href="../style/estilo.css" rel="stylesheet">
 <!-- CKEditor -->
 <script src="../includes/ckeditor/ckeditor.js"></script>
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">

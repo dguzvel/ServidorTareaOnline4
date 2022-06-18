@@ -37,4 +37,17 @@
 
             <?php } ?>
         </div>
+
+            <form action="" method="GET">
+
+            <div class="input-group">  
+            <input class="form-control" name="" placeholder="¿Busca algo en concreto? ... Busque aquí el contenido de las entradas que desee visualizar">
+            <div class="input-group-append">
+                <button class="btn btn-outline-success" type="submit"><i id="icono" class="fa fa-search"></i></button>
+            </div>
+
+            </form>
+
+        </div>
+
     </div>

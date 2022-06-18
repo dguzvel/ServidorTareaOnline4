@@ -115,6 +115,62 @@
 
         }
 
+        //Funciones para Logs
+
+        public function listarLogs(){
+
+            $parametros = ["titulo" => "Mi Blog PHP-MVC", "datos" => NULL, "mensajes" => []];
+    
+            $resultadoModelo = $this->modelo->listarLogs();
+    
+            if ($resultadoModelo["correcto"]){
+    
+                $parametros["datos"] = $resultadoModelo["datos"];
+    
+                $this->mensajes[] = ["tipo" => "success",
+                "mensaje" => "Los registros Log se han listado correctamente <br/>"];
+    
+            } else {
+    
+                $this->mensajes[] = ["tipo" => "danger", "mensaje" => 
+                "No se han podido listar los registros Log <br/>"];
+
+            }
+    
+            $parametros["mensajes"] = $this->mensajes; 
+    
+            include_once '../views/listadoLogs.php';
+    
+        }
+
+        public function eliminarLog(){
+
+            $id = $_GET["log_id"];
+    
+            if (isset($_GET["log_id"]) and is_numeric($_GET["log_id"])){
+    
+                $resultadoModelo = $this->modelo->eliminarLog($id);
+    
+                if ($resultadoModelo["correcto"] == TRUE){
+    
+                    $this->mensajes[] = ["tipo" => "success", "mensaje" => "El registro Log ha sido eliminado correctamente <br>"];
+    
+                } else {
+    
+                    $this->mensajes[] = ["tipo" => "danger", "mensaje" => "No se ha podido eliminar el registro Log debido a un error"];
+                }
+    
+            } else {
+    
+                $this->mensajes[] = ["tipo" => "danger","mensaje" => 
+                "El registro Log que se ha intentado eliminar no existe o no se ha podido acceder a él"];
+
+            }
+    
+            $this->listarLogs();
+
+        }   
+
         //Funciones para Usuarios
 
         public function insertarUsuario(){
@@ -229,7 +285,7 @@
                                                                  'apellidos' => $apellidos,
                                                                  'email' => $email,
                                                                  'password' => sha1($password),
-                                                                 'imagen' => $imagen]);
+                                                                 'imagen' => $imagen]);                                                                
     
                     if ($resultadoModelo["correcto"]){
     
@@ -244,6 +300,12 @@
                         ];
     
                     }
+
+                    //Registro Log                                             
+                    $ahora = date('Y-m-d H:i:s');
+                    $this->modelo->insertarLog(['usuario_id' => $_COOKIE["usuario_id"],
+                                                'fecha' => $ahora,
+                                                'operacion' => "Se ha insertado un nuevo usuario"]); 
     
                   } else {
     
@@ -307,6 +369,12 @@
             if (isset($_GET["usuario_id"]) and is_numeric($_GET["usuario_id"])){
     
                 $resultadoModelo = $this->modelo->eliminarUsuario($id);
+
+                //Registro Log                                             
+                $ahora = date('Y-m-d H:i:s');
+                $this->modelo->insertarLog(['usuario_id' => $_COOKIE["usuario_id"],
+                                            'fecha' => $ahora,
+                                            'operacion' => "Se ha eliminado un usuario"]);
     
                 if ($resultadoModelo["correcto"] == TRUE){
     
@@ -341,6 +409,12 @@
                 if ($resultadoModelo["correcto"]){
 
                     $parametros["datos"] = $resultadoModelo["datos"];
+
+                    //Registro Log                                             
+                    $ahora = date('Y-m-d H:i:s');
+                    $this->modelo->insertarLog(['usuario_id' => $_COOKIE["usuario_id"],
+                                                'fecha' => $ahora,
+                                                'operacion' => "Se ha visto en detalle al usuario ".$parametros["datos"]["nick"]]);
     
                     $this->mensajes[] = ["tipo" => "success", "mensaje" => "Aquí se muestra con más detalle el usuario especificado <br>"];
     
@@ -422,27 +496,33 @@
     
                 if (count($errores) == 0){
                   
-                  $resultadoModelo  = $this->modelo->editarUsuario([
+                    $resultadoModelo  = $this->modelo->editarUsuario([
                                                                     'usuario_id' => $id,
                                                                     'nombre' => $nuevoNombre, 
                                                                     'apellidos' => $nuevoApellidos, 
                                                                     'email' => $nuevoEmail, 
                                                                     'imagen' => $nuevaImagen
                                                                     ]);
-                  
-                  if ($resultadoModelo ["correcto"]){
-    
+                    
+                    if ($resultadoModelo ["correcto"]){
+
                     $this->mensajes[] = ["tipo" => "success", "mensaje" => "El usuario se ha actualizado correctamente"];
-    
-                  }else{
-    
+
+                    }else{
+
                     $this->mensajes[] = ["tipo" => "danger", "mensaje" => "El usuario no ha podido actualizar sus datos <br>"];
-    
-                  }
+
+                    }
+
+                    //Registro Log                                             
+                    $ahora = date('Y-m-d H:i:s');
+                    $this->modelo->insertarLog(['usuario_id' => $_COOKIE["usuario_id"],
+                                                'fecha' => $ahora,
+                                                'operacion' => "Se ha actualizado un usuario"]);
     
                 } else {
     
-                  $this->mensajes[] = ["tipo" => "danger","mensaje" => "Los datos son erroneos"];
+                    $this->mensajes[] = ["tipo" => "danger","mensaje" => "Los datos son erroneos"];
     
                 }
           
@@ -538,6 +618,12 @@
                     $this->mensajes[] = ["tipo" => "success",
                     "mensaje" => "Entrada registrada correctamente"];
 
+                    //Registro Log                                             
+                    $ahora = date('Y-m-d H:i:s');
+                    $this->modelo->insertarLog(['usuario_id' => $_COOKIE["usuario_id"],
+                                                'fecha' => $ahora,
+                                                'operacion' => "Se ha insertado una nueva entrada"]); 
+
                 } else {
 
                     $this->mensajes[] = [
@@ -568,7 +654,7 @@
 
         public function listarEntradas(){
 
-            $parametros = ["titulo" => "Mi Blog PHP-MVC", "datos" => NULL, "pagina" => NULL, "numeroPagina" => NULL, "mensajes" => []];
+            $parametros = ["titulo" => "Mi Blog PHP-MVC", "datos" => NULL, "pagina" => NULL, "numeroPagina" => NULL, "mensajes" => [], "direccion" => NULL];
     
             $resultadoModelo = $this->modelo->listarEntradas();
     
@@ -577,6 +663,7 @@
                 $parametros["datos"] = $resultadoModelo["datos"];
                 $parametros["pagina"] = $resultadoModelo["pagina"];
                 $parametros["numeroPagina"] = $resultadoModelo["numeroPagina"];
+                $parametros["direccion"] = $resultadoModelo["direccion"];
     
                 $this->mensajes[] = ["tipo" => "success",
                 "mensaje" => "Las entradas se han listado correctamente <br/>"];
@@ -601,6 +688,12 @@
             if (isset($_GET["entrada_id"]) and is_numeric($_GET["entrada_id"])){
     
                 $resultadoModelo = $this->modelo->eliminarEntrada($id);
+
+                //Registro Log                                             
+                $ahora = date('Y-m-d H:i:s');
+                $this->modelo->insertarLog(['usuario_id' => $_COOKIE["usuario_id"],
+                                            'fecha' => $ahora,
+                                            'operacion' => "Se ha eliminado una entrada"]);
     
                 if ($resultadoModelo["correcto"] == TRUE){
     
@@ -635,6 +728,12 @@
                 if ($resultadoModelo["correcto"]){
 
                     $parametros["datos"] = $resultadoModelo["datos"];
+
+                    //Registro Log                                             
+                    $ahora = date('Y-m-d H:i:s');
+                    $this->modelo->insertarLog(['usuario_id' => $_COOKIE["usuario_id"],
+                                                'fecha' => $ahora,
+                                                'operacion' => "Se ha visto en detalle la entrada de titulo ".$parametros["datos"]["titulo"]]);
     
                     $this->mensajes[] = ["tipo" => "success", "mensaje" => "Aquí se muestra con más detalle la entrada especificada <br>"];
     
@@ -709,6 +808,12 @@
 
                     $this->mensajes[] = ["tipo" => "success", "mensaje" => "La entrada se ha actualizado correctamente"];
 
+                    //Registro Log                                             
+                    $ahora = date('Y-m-d H:i:s');
+                    $this->modelo->insertarLog(['usuario_id' => $_COOKIE["usuario_id"],
+                                                'fecha' => $ahora,
+                                                'operacion' => "Se ha actualizado una entrada"]);
+
                 }else{
 
                     $this->mensajes[] = ["tipo" => "danger", "mensaje" => "La entrada no ha podido actualizar sus datos <br>"];
@@ -757,7 +862,41 @@
                 
               include_once '../views/formularioActualizaEntrada.php'; 
     
-        }    
+        }
+        
+        public function buscarEntrada(){
+
+            $descripcion = $_GET["descripcion"];
+
+            $parametros = ["titulo" => "Mi Blog PHP-MVC", "datos" => NULL, "mensajes" => []];
+    
+            if (isset($_GET["descripcion"])){
+    
+                $resultadoModelo = $this->modelo->buscarEntrada($descripcion);
+    
+                if ($resultadoModelo["correcto"]){
+
+                    $parametros["datos"] = $resultadoModelo["datos"];
+    
+                    $this->mensajes[] = ["tipo" => "success", "mensaje" => "Aquí se muestran los resultados de la búsqueda <br>"];
+    
+                } else {
+    
+                    $this->mensajes[] = ["tipo" => "danger", "mensaje" => "No se han encontrado entradas con los parámetros de búsqueda debido a un error"];
+                }
+    
+            } else {
+    
+                $this->mensajes[] = ["tipo" => "danger","mensaje" => 
+                "La entrada que busca no existe o no se ha podido acceder a ella"];
+
+            }
+
+            $parametros["mensajes"] = $this->mensajes;
+
+            include_once '../views/listadoBusqueda.php';
+
+        }
 
     }
 

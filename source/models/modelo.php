@@ -74,6 +74,19 @@
                 );";
                 $this->conexion->exec($sql);
 
+                //Tabla Logs, que guarda los registros de las operaciones realizadas
+                $sql = "CREATE TABLE IF NOT EXISTS logs(
+
+                    log_id int(255) auto_increment not null,
+                    usuario_id int(255) not null,
+                    fecha datetime(6) not null,
+                    operacion varchar(255),
+                    CONSTRAINT pk_log PRIMARY KEY (log_id),
+                    CONSTRAINT fk_usuariolog FOREIGN KEY (usuario_id) REFERENCES usuarios (usuario_id)
+
+                );";
+                $this->conexion->exec($sql);
+
                 //Activamos el  modo de excepciones
                 $this->conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 
@@ -133,6 +146,111 @@
 
             return $resultadoModelo;
 
+        }
+
+        //Modelo LOG
+
+        public function insertarLog($datos){
+
+            try {
+                
+                //Iniciamos la transacción de Datos
+                $this->conexion->beginTransaction();
+                //Insertar valores en una tabla de la Base de Datos
+                $sql = "INSERT INTO logs VALUES(
+
+                    NULL,
+                    :usuario_id,
+                    :fecha,
+                    :operacion
+
+                );";
+                $query = $this->conexion->prepare($sql);
+                $query->execute([
+
+                        'usuario_id' => $datos["usuario_id"],
+                        'fecha' => $datos["fecha"],
+                        'operacion' => $datos["operacion"]
+
+                        ]);
+
+                if($query){
+
+                    $this->conexion->commit();
+
+                }
+
+            } catch (PDOException $e) {
+
+                $this->conexion->rollback();
+
+            }
+
+        }
+
+        public function listarLogs(){
+
+            $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
+    
+            try {               
+
+                $sql = "SELECT * FROM logs;";
+
+                $query = $this->conexion->query($sql);
+                $query->setFetchMode(PDO::FETCH_ASSOC);
+                $articulos = $query->fetchAll();
+                
+                if ($query){ 
+                    
+                    $resultadoModelo["correcto"] = TRUE;
+                    $resultadoModelo["datos"] = $articulos;
+
+                }             
+    
+            } catch(PDOException $e){
+    
+                $resultadoModelo["error"] = $e->getMessage();
+
+            }
+    
+            return $resultadoModelo;
+
+        }
+
+        public function eliminarLog($id){
+
+            $resultadoModelo = ["correcto" => FALSE, "error" => NULL];
+    
+            if ($id and is_numeric($id)){
+    
+                try{
+    
+                    $sql = "DELETE FROM logs WHERE log_id = :log_id;";
+    
+                    $query = $this->conexion->prepare($sql);
+    
+                    $query->execute(['log_id' => $id]);
+            
+                    if ($query){
+                        
+                       $resultadoModelo["correcto"] = TRUE;
+            
+                    }
+            
+                } catch (PDOException $e){ 
+            
+                    $resultadoModelo["error"] = $e->getMessage();
+
+                }
+            
+            } else {
+    
+                $resultadoModelo["correcto"] = FALSE;
+
+            }
+    
+            return $resultadoModelo;
+            
         }
 
         //Modelo USUARIO
@@ -389,18 +507,22 @@
 
         public function listarEntradas(){
 
-            $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "pagina" => NULL, "numeroPagina" => NULL, "error" => NULL];
+            $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "pagina" => NULL, "numeroPagina" => NULL, "error" => NULL, "direccion" => NULL];
     
             try {               
 
                 $pagina = isset($_GET["pagina"]) ? (int)$_GET["pagina"] : 1;
                 $resultadoModelo["pagina"] = $pagina;
 
+                $direccion = "";
+                $direccion = ($direccion == "ASC") ? "DESC" : "ASC";
+                $resultadoModelo["direccion"] = $direccion;
+
                 $filasPorPagina = 2;
 
                 $inicio = ($pagina > 1) ? ($pagina * $filasPorPagina - $filasPorPagina) : 0;
 
-                $sql = "SELECT SQL_CALC_FOUND_ROWS * FROM entradas LIMIT $inicio, $filasPorPagina;";
+                $sql = "SELECT SQL_CALC_FOUND_ROWS * FROM entradas ORDER BY fecha $direccion LIMIT $inicio, $filasPorPagina;";
 
                 $query = $this->conexion->query($sql);
                 $query->setFetchMode(PDO::FETCH_ASSOC);
@@ -530,6 +652,39 @@
     
             return $resultadoModelo;
             
+        }
+
+        public function buscarEntrada($descripcion){
+
+            $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
+    
+            if ($descripcion){
+    
+                try {
+    
+                    $sql = "SELECT * FROM entradas WHERE descripcion LIKE :descripcion;";
+    
+                    $query = $this->conexion->prepare($sql);
+    
+                    $query->execute(['descripcion' => "%".$descripcion."%"]);
+                     
+                    if ($query) { 
+    
+                        $resultadoModelo["correcto"] = TRUE;
+                        $resultadoModelo["datos"] = $query->fetch(PDO::FETCH_ASSOC);
+    
+                    }
+    
+                } catch (PDOException $e) {
+    
+                    $resultadoModelo["error"] = $e->getMessage();
+    
+                }
+    
+            }
+          
+            return $resultadoModelo;
+    
         }
 
     }
