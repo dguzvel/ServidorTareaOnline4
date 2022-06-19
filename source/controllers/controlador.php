@@ -1,6 +1,10 @@
 <?php
 
     require_once '../models/modelo.php';
+    require_once '../libraries/PhpSpreadsheet/vendor/autoload.php';
+
+    use PhpOffice\PhpSpreadsheet\Spreadsheet;
+    use PhpOffice\PhpSpreadsheet\IOFactory;
 
     class controlador {
         
@@ -20,16 +24,19 @@
 
             error_reporting(E_ERROR | E_WARNING | E_PARSE);
             
+            //Nick y Password permanentes, aunque no haya registros en la tabla usuarios, que sirven de credenciales al administrador
             $nickAdmin = "Admin";
             $passwordAdmin = "12345";
 
             $nicksValidos = NULL;
             $passwordsValidos = NULL;
-    
+            
+            //Se extrae toda la información de la tabla usuarios
             $resultadoModelo = $this->modelo->login();
             
             if ($resultadoModelo["correcto"]){
                 
+                //La información se almacena en dos array, uno con todos los nicks registrados y otro con todos los passwords
                 foreach ($resultadoModelo["datos"] as $res) :
 
                     $nicksValidos[] = $res["nick"];
@@ -39,6 +46,7 @@
     
             } 
 
+            //Llamada a la librería del Captcha
             require_once "../libraries/recaptchalib.php";
         
             //Se accede si se pulsa el botón para enviar información del formulario de login
@@ -360,41 +368,7 @@
     
             include_once '../views/listadoUsuarios.php';
     
-        }
-
-        public function eliminarUsuario(){
-
-            $id = $_GET["usuario_id"];
-    
-            if (isset($_GET["usuario_id"]) and is_numeric($_GET["usuario_id"])){
-    
-                $resultadoModelo = $this->modelo->eliminarUsuario($id);
-
-                //Registro Log                                             
-                $ahora = date('Y-m-d H:i:s');
-                $this->modelo->insertarLog(['usuario_id' => $_COOKIE["usuario_id"],
-                                            'fecha' => $ahora,
-                                            'operacion' => "Se ha eliminado un usuario"]);
-    
-                if ($resultadoModelo["correcto"] == TRUE){
-    
-                    $this->mensajes[] = ["tipo" => "success", "mensaje" => "El usuario ha sido eliminado correctamente <br>"];
-    
-                } else {
-    
-                    $this->mensajes[] = ["tipo" => "danger", "mensaje" => "No se ha podido eliminar al usuario debido a un error"];
-                }
-    
-            } else {
-    
-                $this->mensajes[] = ["tipo" => "danger","mensaje" => 
-                "El usuario que se ha intentado eliminar no existe o no se ha podido acceder a él"];
-
-            }
-    
-            $this->listarUsuarios();
-
-        }        
+        }      
         
         public function listarUnUsuario(){
 
@@ -572,6 +546,163 @@
     
         }
 
+        public function eliminarUsuario(){
+
+            $id = $_GET["usuario_id"];
+    
+            if (isset($_GET["usuario_id"]) and is_numeric($_GET["usuario_id"])){
+    
+                $resultadoModelo = $this->modelo->eliminarUsuario($id);
+
+                //Registro Log                                             
+                $ahora = date('Y-m-d H:i:s');
+                $this->modelo->insertarLog(['usuario_id' => $_COOKIE["usuario_id"],
+                                            'fecha' => $ahora,
+                                            'operacion' => "Se ha eliminado un usuario"]);
+    
+                if ($resultadoModelo["correcto"] == TRUE){
+    
+                    $this->mensajes[] = ["tipo" => "success", "mensaje" => "El usuario ha sido eliminado correctamente <br>"];
+    
+                } else {
+    
+                    $this->mensajes[] = ["tipo" => "danger", "mensaje" => "No se ha podido eliminar al usuario debido a un error"];
+                }
+    
+            } else {
+    
+                $this->mensajes[] = ["tipo" => "danger","mensaje" => 
+                "El usuario que se ha intentado eliminar no existe o no se ha podido acceder a él"];
+
+            }
+    
+            $this->listarUsuarios();
+
+        }
+        
+        public function listarEXCEL(){
+
+            error_reporting(E_ERROR | E_WARNING | E_PARSE);
+    
+            $parametros = $this->modelo->listarEXCEL();
+
+            $spreadsheet = new Spreadsheet();
+            $hoja = $spreadsheet->getActiveSheet();
+
+            $fila = 1;
+
+            $hoja->setTitle('usuarios');
+            $hoja->setCellValue('A'.$fila, 'usuario_id');
+            $hoja->setCellValue('B'.$fila, 'nick');
+            $hoja->setCellValue('C'.$fila, 'nombre');
+            $hoja->setCellValue('D'.$fila, 'apellidos');
+            $hoja->setCellValue('E'.$fila, 'email');
+            $hoja->setCellValue('F'.$fila, 'password');
+            $hoja->setCellValue('G'.$fila, 'imagen');
+            $hoja->setCellValue('H'.$fila, 'categoria_id');
+    
+            $fila ++;
+    
+            while($valores = $parametros->fetch(PDO::FETCH_ASSOC)){
+    
+                $hoja->setCellValue('A'.$fila, $valores["usuario_id"]);
+                $hoja->setCellValue('B'.$fila, $valores["nick"]);
+                $hoja->setCellValue('C'.$fila, $valores["nombre"]);
+                $hoja->setCellValue('D'.$fila, $valores["apellidos"]);
+                $hoja->setCellValue('E'.$fila, $valores["email"]);
+                $hoja->setCellValue('F'.$fila, $valores["password"]);
+                $hoja->setCellValue('G'.$fila, $valores["imagen"]);
+                $hoja->setCellValue('H'.$fila, $valores["categoria_id"]);
+    
+                $fila ++;
+            }
+    
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment;filename="usuarios.xlsx"');
+            header('Cache-Control: max-age=0');
+    
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $writer->save('php://output');
+            exit;
+
+        }
+
+        public function insertarEXCEL(){
+
+            error_reporting(E_ERROR | E_WARNING | E_PARSE);
+    
+            if(isset($_POST['importar'])){
+
+                $nombreArchivo = $_FILES['excel']['name'];
+                $tipoArchivo = pathinfo($nombreArchivo, PATHINFO_EXTENSION);
+    
+                $extensiones = ['xls','csv','xlsx'];
+    
+                if(in_array($tipoArchivo, $extensiones)){
+    
+                    $inputFileNamePath = $_FILES['excel']['tmp_name'];
+                    $spreadsheet = IOFactory::load($inputFileNamePath);
+                    $filas = $spreadsheet->getActiveSheet()->toArray();
+    
+                    foreach($filas as $fila){
+    
+                        $nick = $fila["0"];
+                        $nombre = $fila["1"];
+                        $apellidos = $fila["2"];
+                        $email = $fila["3"];
+                        $password = sha1($fila["4"]);
+                        $imagen = $fila["5"];
+    
+                        $resultadoModelo = $this->modelo->insertarUsuario(['nick' => $nick,
+                        'nombre' => $nombre, 
+                        'apellidos' => $apellidos,
+                        'email' => $email,
+                        'password' => sha1($password),
+                        'imagen' => $imagen]);
+    
+                    }
+    
+                    if ($resultadoModelo["correcto"]){
+    
+                        $this->mensajes[] = ["tipo" => "success",
+                        "mensaje" => "Usuario insertado desde el EXCEL correctamente"];
+    
+                    } else {
+    
+                        $this->mensajes[] = [
+                            "tipo" => "danger",
+                            "mensaje" => "No se han podido insertar el usuario desde el EXCEL <br>({$resultadoModelo["error"]})"
+                        ];
+    
+                    }
+    
+    
+                } else {
+    
+                    $this->mensajes[] = [
+                        "tipo" => "danger",
+                        "mensaje" => "El archivo que ha intentado subir no es válido"
+                    ];
+                }
+            }
+    
+            $parametros = [
+                "titulo" => "Mi Blog PHP-MVC",
+                "datos" => [
+                    "nick" => isset($nick) ? $nick : "",
+                    "nombre" => isset($nombre) ? $nombre : "",
+                    "apellidos" => isset($apellidos) ? $apellidos : "",
+                    "email" => isset($email) ? $email : "",
+                    "password" => isset($password) ? $password : "",
+                    "imagen" => isset($imagen) ? $imagen : ""
+                ],
+                "mensajes" => $this->mensajes
+            ];
+    
+            $this->listarUsuarios();
+
+        }
+
         //Funciones para Entradas
 
         public function insertarEntrada(){
@@ -679,41 +810,7 @@
     
             include_once '../views/listadoEntradas.php';
     
-        }
-
-        public function eliminarEntrada(){
-
-            $id = $_GET["entrada_id"];
-    
-            if (isset($_GET["entrada_id"]) and is_numeric($_GET["entrada_id"])){
-    
-                $resultadoModelo = $this->modelo->eliminarEntrada($id);
-
-                //Registro Log                                             
-                $ahora = date('Y-m-d H:i:s');
-                $this->modelo->insertarLog(['usuario_id' => $_COOKIE["usuario_id"],
-                                            'fecha' => $ahora,
-                                            'operacion' => "Se ha eliminado una entrada"]);
-    
-                if ($resultadoModelo["correcto"] == TRUE){
-    
-                    $this->mensajes[] = ["tipo" => "success", "mensaje" => "La entrada ha sido eliminado correctamente <br>"];
-    
-                } else {
-    
-                    $this->mensajes[] = ["tipo" => "danger", "mensaje" => "No se ha podido eliminar La entrada debido a un error"];
-                }
-    
-            } else {
-    
-                $this->mensajes[] = ["tipo" => "danger","mensaje" => 
-                "La entrada que se ha intentado eliminar no existe o no se ha podido acceder a ella"];
-
-            }
-    
-            $this->listarEntradas();
-
-        }        
+        }     
         
         public function listarUnaEntrada(){
 
@@ -863,6 +960,40 @@
               include_once '../views/formularioActualizaEntrada.php'; 
     
         }
+
+        public function eliminarEntrada(){
+
+            $id = $_GET["entrada_id"];
+    
+            if (isset($_GET["entrada_id"]) and is_numeric($_GET["entrada_id"])){
+    
+                $resultadoModelo = $this->modelo->eliminarEntrada($id);
+
+                //Registro Log                                             
+                $ahora = date('Y-m-d H:i:s');
+                $this->modelo->insertarLog(['usuario_id' => $_COOKIE["usuario_id"],
+                                            'fecha' => $ahora,
+                                            'operacion' => "Se ha eliminado una entrada"]);
+    
+                if ($resultadoModelo["correcto"] == TRUE){
+    
+                    $this->mensajes[] = ["tipo" => "success", "mensaje" => "La entrada ha sido eliminado correctamente <br>"];
+    
+                } else {
+    
+                    $this->mensajes[] = ["tipo" => "danger", "mensaje" => "No se ha podido eliminar La entrada debido a un error"];
+                }
+    
+            } else {
+    
+                $this->mensajes[] = ["tipo" => "danger","mensaje" => 
+                "La entrada que se ha intentado eliminar no existe o no se ha podido acceder a ella"];
+
+            }
+    
+            $this->listarEntradas();
+
+        }   
         
         public function buscarEntrada(){
 

@@ -67,6 +67,21 @@
                 <?php } } ?>
             
             </table>
+
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <div class="d-flex justify-content-center">
+                <button type="button" class="btn btn-success" onclick="location.href='../views/index.php?accion=listarEXCEL'">Exportar EXCEL</button>
+            </div>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <?php if($_COOKIE["categoria_id"] == 1){ ?>
+                <div class="d-flex justify-content-center">
+                    <form action="../views/index.php?accion=insertarEXCEL" method="POST" enctype="multipart/form-data">
+                        <input type="file" name="excel" style="background-color: white">
+                        <button type="submit" name="importar" class="btn btn-danger">Importar EXCEL</button>
+                    </form>    
+                </div>
+            <?php } ?>
+            &nbsp;&nbsp;&nbsp;&nbsp;
             
             <!-- Navegación de la página -->
             <nav aria-label="Page navigation">

@@ -100,6 +100,12 @@
 
         //Login y roles
 
+        /**
+         * Función que devuelve la información de todo el contenido de la tabla usuarios. Posteriormente,
+         * será utilizado para conocer los nicks y passwords de registro y, con ellos, permitir el login.
+         * 
+         * @return void
+         */
         public function login(){
 
             $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
@@ -129,6 +135,13 @@
 
         }    
         
+        /**
+         * Mediante un nick, se selecciona a un usuario concreto, del cual querremos conocer su ID
+         * y su Categoría (1 Administrador o 2 Usuario).
+         *
+         * @param string $nick
+         * @return void
+         */
         public function categoria($nick){
 
             $sql = "SELECT * FROM usuarios WHERE nick = :nick;";
@@ -150,6 +163,12 @@
 
         //Modelo LOG
 
+        /**
+         * Inserta los datos en la tabla logs que le son enviados mediante un array.
+         *
+         * @param array $datos
+         * @return void
+         */
         public function insertarLog($datos){
 
             try {
@@ -188,6 +207,11 @@
 
         }
 
+        /**
+         * Devuelve toda la información almacenada en la tabla logs
+         *
+         * @return void
+         */
         public function listarLogs(){
 
             $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
@@ -217,6 +241,13 @@
 
         }
 
+        /**
+         * Elimina un registro de la tabla logs cuya ID coincida con aquella que se le pasa como
+         * parámetro a la función
+         *
+         * @param int $id
+         * @return void
+         */
         public function eliminarLog($id){
 
             $resultadoModelo = ["correcto" => FALSE, "error" => NULL];
@@ -255,6 +286,12 @@
 
         //Modelo USUARIO
 
+        /**
+         * Realiza la inserción de una nueva fila en la tabla usuarios
+         *
+         * @param array $datos
+         * @return void
+         */
         public function insertarUsuario($datos){
 
             $resultadoModelo = [ "correcto" => FALSE, "error" => NULL ];
@@ -307,17 +344,24 @@
 
         }
 
+        /**
+         * Devuelve toda la información almacenada en la tabla usuarios y la divide por páginas
+         *
+         * @return void
+         */
         public function listarUsuarios(){
 
             $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "pagina" => NULL, "numeroPagina" => NULL, "error" => NULL];
     
             try {               
 
+                //La página por defecto será la 1 a menos que una sea seleccionada
                 $pagina = isset($_GET["pagina"]) ? (int)$_GET["pagina"] : 1;
                 $resultadoModelo["pagina"] = $pagina;
 
                 $filasPorPagina = 2;
 
+                //Cálculo de la primera fila que debe aparecer en cada página
                 $inicio = ($pagina > 1) ? ($pagina * $filasPorPagina - $filasPorPagina) : 0;
 
                 $sql = "SELECT SQL_CALC_FOUND_ROWS * FROM usuarios LIMIT $inicio, $filasPorPagina;";
@@ -336,6 +380,7 @@
                 $totalArticulos = $this->conexion->query("SELECT FOUND_ROWS() as total;");
                 $totalArticulos = $totalArticulos->fetch()["total"];
 
+                //Número total de páginas, resultado de la división de los artículos existentes en la tabla entre los que aparacen en cada página
                 $numeroPagina = ceil($totalArticulos / $filasPorPagina);
                 $resultadoModelo["numeroPagina"] = $numeroPagina;                
     
@@ -350,6 +395,12 @@
 
         }
 
+        /**
+         * Devuelve la información de un usuario específico mediante su ID
+         *
+         * @param int $id
+         * @return void
+         */
         public function listarUnUsuario($id){
 
             $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
@@ -383,6 +434,12 @@
     
         }
 
+        /**
+         * Mediante un array con datos se modifican unos valores determinados del usuario seleccionado mediante su ID
+         *
+         * @param array $datos
+         * @return void
+         */
         public function editarUsuario($datos){
 
             $resultadoModelo = ["correcto" => FALSE, "error" => NULL];
@@ -417,6 +474,12 @@
     
         }      
 
+        /**
+         * Se elimina a un usuario indentificado por su ID
+         *
+         * @param int $id
+         * @return void
+         */
         public function eliminarUsuario($id){
 
             $resultadoModelo = ["correcto" => FALSE, "error" => NULL];
@@ -453,8 +516,29 @@
             
         }
 
+        /**
+         * Devuelve una consulta a la tabla usuarios para poder exportarla como un excel
+         *
+         * @return void
+         */
+        public function listarEXCEL(){         
+
+            $sql = "SELECT * FROM usuarios;";
+
+            $query = $this->conexion->query($sql);           
+    
+            return $query;
+
+        }
+
         //Modelo ENTRADA
 
+        /**
+         * Realiza la inserción de una nueva fila en la tabla entradas
+         *
+         * @param array $datos
+         * @return void
+         */
         public function insertarEntrada($datos){
 
             $resultadoModelo = [ "correcto" => FALSE, "error" => NULL ];
@@ -505,6 +589,11 @@
 
         }
 
+        /**
+         * Devuelve toda la información almacenada en la tabla entradas y la divide por páginas
+         *
+         * @return void
+         */
         public function listarEntradas(){
 
             $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "pagina" => NULL, "numeroPagina" => NULL, "error" => NULL, "direccion" => NULL];
@@ -522,6 +611,7 @@
 
                 $inicio = ($pagina > 1) ? ($pagina * $filasPorPagina - $filasPorPagina) : 0;
 
+                //Las filas de la tabla de entradas se pueden ordenar de manera ascendente o descendente a través de la FECHA
                 $sql = "SELECT SQL_CALC_FOUND_ROWS * FROM entradas ORDER BY fecha $direccion LIMIT $inicio, $filasPorPagina;";
 
                 $query = $this->conexion->query($sql);
@@ -552,6 +642,12 @@
 
         }
 
+        /**
+         * Devuelve la información de una entrada específica mediante su ID
+         *
+         * @param int $id
+         * @return void
+         */
         public function listarUnaEntrada($id){
 
             $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
@@ -585,6 +681,12 @@
     
         }
 
+        /**
+         * Mediante un array con datos se modifican unos valores determinados de la entrada seleccionada mediante su ID
+         *
+         * @param array $datos
+         * @return void
+         */
         public function editarEntrada($datos){
 
             $resultadoModelo = ["correcto" => FALSE, "error" => NULL];
@@ -618,6 +720,12 @@
     
         }      
 
+        /**
+         * Se elimina una entrada identificada por su ID
+         *
+         * @param int $id
+         * @return void
+         */
         public function eliminarEntrada($id){
 
             $resultadoModelo = ["correcto" => FALSE, "error" => NULL];
@@ -654,6 +762,13 @@
             
         }
 
+        /**
+         * Mediante parte del contenido de la descripción, en una barra de búsqueda, se listarán las entradas que contengan
+         * esa palabra o palabras.
+         *
+         * @param string $descripcion
+         * @return void
+         */
         public function buscarEntrada($descripcion){
 
             $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];
@@ -661,7 +776,8 @@
             if ($descripcion){
     
                 try {
-    
+                    
+                    //Con LIKE el valor no tiene que ser idéntico, bastante con que contenga el valor que se almacene en descripcion.
                     $sql = "SELECT * FROM entradas WHERE descripcion LIKE :descripcion;";
     
                     $query = $this->conexion->prepare($sql);
@@ -687,6 +803,12 @@
     
         }
 
+        /**
+         * Devuelve toda la información de la tabla entradas sin paginar, para mostrarla en una vista que se podrá
+         * descargar en formato pdf.
+         *
+         * @return void
+         */
         public function listarPDF(){
 
             $resultadoModelo = ["correcto" => FALSE, "datos" => NULL, "error" => NULL];             

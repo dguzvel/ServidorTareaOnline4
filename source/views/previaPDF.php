@@ -104,7 +104,7 @@
                             <td><?=$dat["usuario_id"]?></td>
                             <td><?=$dat["titulo"]?></td>
                             
-                            <td><img class="img-thumbnail rounded" src="http://<?php echo $_SERVER['HTTP_HOST']?>/servidortareaonline4 copy/source/views/fotos/<?=$dat["imagen"]?>" height="150" width="150"/></td>
+                            <td><img class="img-thumbnail rounded" src="http://<?php echo $_SERVER['HTTP_HOST']?>/servidortareaonline4/source/views/fotos/<?=$dat["imagen"]?>" height="150" width="150"/></td>
                             <td><?=$dat["descripcion"]?></td>
                         </tr>
 
